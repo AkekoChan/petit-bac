@@ -1,46 +1,32 @@
 import { useEffect, useState } from "react";
 
-interface User {
-  id: number;
-  name: string;
-  age: number;
-}
+import { io } from "socket.io-client";
+const socket = io("http://localhost:4000");
 
-function App() {
-  const [users, setUsers] = useState<User[]>();
-  const [isLoading, setIsLoading] = useState(true);
-
+const App = () => {
+  const [message, setMessage] = useState<string>("");
+  const [messageReceived, setMessageReceived] = useState<string>("");
+  const handleSendMessage = () => {
+    console.log("clicked");
+    socket.emit("send_message", { message: message });
+  };
   useEffect(() => {
-    const abortController = new AbortController();
-
-    fetch("http://localhost:8000/users", { signal: abortController.signal })
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data);
-        setIsLoading(false);
-      })
-      .catch((e) => console.error(e));
-
-    return () => {
-      abortController.abort();
-    };
-  }, []);
+    socket.on("receive_message", (data) => {
+      console.log(data);
+      setMessageReceived(data.message);
+    });
+  }, [socket]);
 
   return (
     <>
-      <ul>
-        {isLoading ? (
-          <li>Loading...</li>
-        ) : (
-          users?.map((user) => (
-            <li key={user.id}>
-              {user.name} - {user.age}
-            </li>
-          ))
-        )}
-      </ul>
+      <input
+        placeholder="Message"
+        onChange={(e) => setMessage(e.target.value)}
+      />
+      <button onClick={handleSendMessage}>Send message</button>
+      <h1>Message: {messageReceived}</h1>
     </>
   );
-}
+};
 
 export default App;

@@ -1,34 +1,27 @@
-import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
-import path from "path";
+import { Server } from "socket.io";
+import http from "http";
 import cors from "cors";
 
-dotenv.config();
-
 const app: Express = express();
-
-app.use(express.json());
 app.use(cors());
 
-const users = [
-  {
-    id: Math.floor(Math.random() * 1000),
-    name: "John",
-    age: 30,
-  },
-  {
-    id: Math.floor(Math.random() * 1000),
-    name: "Jane",
-    age: 25,
-  },
-];
-
-app.get("/users", (req: Request, res: Response) => {
-  res.json(users);
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
 });
 
-const port = process.env.PORT || 8000;
+io.on("connection", (socket) => {
+  console.log(`a user connected ${socket.id}`);
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  socket.on("send_message", (data) => {
+    socket.broadcast.emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected", socket.id);
+  });
+});
+server.listen(4000, () => {
+  console.log("listening on *:4000");
 });
