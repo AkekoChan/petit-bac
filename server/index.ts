@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from "express";
 import { Server } from "socket.io";
 import http from "http";
 import cors from "cors";
+import { Game } from "./game";
 
 const app: Express = express();
 app.use(cors());
@@ -22,6 +23,7 @@ io.on("connection", (socket) => {
     console.log("user disconnected", socket.id);
   });
 });
+
 server.listen(4000, () => {
   console.log("listening on *:4000");
 });
